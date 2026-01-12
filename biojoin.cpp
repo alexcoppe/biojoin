@@ -5,6 +5,7 @@
 #include<string>
 #include<vector>
 #include<map>
+#include <unordered_map>
 #include<string_view>
 #include<ranges>
 
@@ -25,9 +26,9 @@
 // {"Rambo", ["123", "Rambo", "Soldier", "123 Rambo Soldier"]},
 // {"Jim", ["555", "Jim", "Scientist, "Jim 555 Scientist"]}
 // {"Jim", ["333", "Jim", "CLover, "Jim 555 CLover"]}
-std::multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, int colum_key){
+std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, int colum_key){
     std::string line;
-    std::multimap<std::string, std::vector<std::string>>key_values;
+    std::unordered_multimap<std::string, std::vector<std::string>>key_values;
 
     while (std::getline(input_file1, line)) {
         if (line[0] == '#')
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    std::multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, key_field);
+    std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, key_field);
 
     // Check if can open the second file
     std::ifstream input_file2(argv[1]);
