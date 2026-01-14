@@ -71,7 +71,7 @@ int main(int argc, char *argv[]){
     char c;
     int processes_to_use = 1;
     std::string key_field = "";
-    int key_field2 = 0;
+    std::string key_field2 = "";
     int hflag = 0;
 
     const char help[] =
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
                 key_field = optarg;
                 break;
             case 'g':
-                key_field2 = atoi(optarg);
+                key_field2 = optarg;
                 break;
             case 'p':
                 processes_to_use = atoi(optarg);
@@ -130,6 +130,7 @@ int main(int argc, char *argv[]){
     }
 
     std::vector<int> columns_for_key = create_wanted_key(key_field);
+    std::vector<int> columns_for_key2 = create_wanted_key(key_field2);
 
     std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key);
 
@@ -150,11 +151,15 @@ int main(int argc, char *argv[]){
         for (auto part : line | std::views::split('\t')) {
             substrings.emplace_back(part.begin(), part.end());
         }
-        std::string key =  substrings[key_field2];
+        // Loop that constructs the key using the -g parameter after it is parsed by the create_wanted_key function
+        std::string second_file_key = "";
+        for (auto i: columns_for_key2) {
+            second_file_key = second_file_key + substrings[i];
+        }
 
         // Equal_range returns std::pair
         // in this case the key and the value
-        auto range = multi_map.equal_range(key);
+        auto range = multi_map.equal_range(second_file_key);
         // To see all the std::pair
         for (auto it = range.first; it != range.second; ++it){
             std::cout << it->second.back() <<  "\t" << line << std::endl;
