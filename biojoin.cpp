@@ -12,6 +12,7 @@ int main(int argc, char *argv[]){
     int processes_to_use = 1;
     std::string key_field = "";
     std::string key_field2 = "";
+    std::string  separator = "\t";
 
     const char help[] =
             "Usage: reads_count++ [OPTIONS]... BAM_file GFF3_file\n"
@@ -19,10 +20,11 @@ int main(int argc, char *argv[]){
             "Options:\n"
             "  -h        show help options\n"
             "  -f <n>    field from first file to be used as key\n"
-            "  -g <n>    field from second file to be used as key\n"
+            "  -s <n>    field from second file to be used as key\n"
+            "  -d <c>    The delimiter to be used (default tab)\n"
             "  -p <n>    set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hf:g:p:")) != -1){
+    while ((c = getopt (argc, argv, "hf:s:d:p:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
@@ -30,12 +32,16 @@ int main(int argc, char *argv[]){
             case 'f':
                 key_field = optarg;
                 break;
-            case 'g':
+            case 's':
                 key_field2 = optarg;
                 break;
             case 'p':
                 processes_to_use = atoi(optarg);
                 if (processes_to_use < 1) processes_to_use = 1;
+                break;
+            case 'd':
+                if (optarg != NULL)
+                    separator = optarg;
                 break;
             case '?':
                 if (isprint(optopt))
@@ -50,6 +56,9 @@ int main(int argc, char *argv[]){
 
     argc -= optind;
     argv += optind;
+
+    char separator_as_char = separator.empty() ? '\t' : separator[0];
+
 
     /* Check if there is a BAM and a GFF3 file */
     if (argc < 2) {
@@ -70,7 +79,7 @@ int main(int argc, char *argv[]){
     std::vector<int> columns_for_key = create_wanted_key(key_field);
     std::vector<int> columns_for_key2 = create_wanted_key(key_field2);
 
-    std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key);
+    std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char);
 
     // Check if can open the second file
     std::ifstream input_file2(argv[1]);
@@ -83,8 +92,9 @@ int main(int argc, char *argv[]){
     while (std::getline(input_file2, line)) {
         if (line[0] == '#')
             continue;
+
         std::vector<std::string>substrings;
-        for (auto part : line | std::views::split('\t')) {
+        for (auto part : line | std::views::split(separator_as_char)) {
             substrings.emplace_back(part.begin(), part.end());
         }
         // Loop that constructs the key using the -g parameter after it is parsed by the create_wanted_key function
@@ -98,7 +108,7 @@ int main(int argc, char *argv[]){
         auto range = multi_map.equal_range(second_file_key);
         // To see all the std::pair
         for (auto it = range.first; it != range.second; ++it){
-            std::cout << it->second.back() <<  "\t" << line << std::endl;
+            std::cout << it->second.back() <<  separator_as_char << line << std::endl;
         }
     }
 

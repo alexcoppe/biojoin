@@ -22,7 +22,7 @@
 // {"Jim", ["555", "Jim", "Scientist, "Jim 555 Scientist"]}
 // {"Jim", ["333", "Jim", "CLover, "Jim 555 CLover"]}
 //std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, int colum_key){
-std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, std::vector<int>columns_for_key){
+std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, std::vector<int>columns_for_key, char separator){
     std::string line;
     std::unordered_multimap<std::string, std::vector<std::string>>key_values;
 
@@ -30,7 +30,7 @@ std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(
         if (line[0] == '#')
             continue;
         std::vector<std::string>substrings;
-        for (auto part : line | std::views::split('\t')) {
+        for (auto part : line | std::views::split(separator)) {
             // emplace_back insert element to a vector like push_back but a little bit faster as 
             // the string is constructed inside the vector. 
             // https://www.geeksforgeeks.org/cpp/vectoremplace_back-c-stl/
