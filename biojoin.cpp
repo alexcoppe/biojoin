@@ -5,6 +5,7 @@
 #include<vector>
 #include<unordered_map>
 #include<ranges>
+#include<algorithm>
 #include "create_dictionary.h"
 
 int main(int argc, char *argv[]){
@@ -12,8 +13,9 @@ int main(int argc, char *argv[]){
     int processes_to_use = 1;
     std::string key_field = "";
     std::string key_field2 = "";
-    std::string  separator1 = "\t";
-    std::string  separator2 = "\t";
+    std::string separator1 = "\t";
+    std::string separator2 = "\t";
+    std::string separator_user_wants = "\t";
 
     const char help[] =
             "Usage: reads_count++ [OPTIONS]... BAM_file GFF3_file\n"
@@ -24,9 +26,10 @@ int main(int argc, char *argv[]){
             "  -s <n>    field from second file to be used as key\n"
             "  -d <c>    The field separator string in the first file argument (default tab)\n"
             "  -e <c>    The field separator string in the second file argument (default tab)\n"
+            "  -o <c>    The field separator the user wants in the output (default tab)\n"
             "  -p <n>    set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hf:s:d:p:e:")) != -1){
+    while ((c = getopt (argc, argv, "hf:s:d:p:e:o:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
@@ -49,6 +52,10 @@ int main(int argc, char *argv[]){
                 if (optarg != NULL)
                     separator2 = optarg;
                 break;
+            case 'o':
+                if (optarg != NULL)
+                    separator_user_wants = optarg;
+                break;
             case '?':
                 if (isprint(optopt))
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
@@ -65,6 +72,7 @@ int main(int argc, char *argv[]){
 
     char separator_as_char1 = separator1.empty() ? '\t' : separator1[0];
     char separator_as_char2 = separator2.empty() ? '\t' : separator2[0];
+    char separator_user_wants_as_char = separator_user_wants.empty() ? '\t' : separator_user_wants[0];
 
 
     /* Check if there is a BAM and a GFF3 file */
@@ -115,7 +123,13 @@ int main(int argc, char *argv[]){
         auto range = multi_map.equal_range(second_file_key);
         // To see all the std::pair
         for (auto it = range.first; it != range.second; ++it){
-            std::cout << it->second.back() <<  separator_as_char1 << line << std::endl;
+            if (separator_as_char1 != '\t'){
+                std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
+            }
+            if (separator_as_char2 != '\t')
+                std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
+
+            std::cout << it->second.back() << separator_user_wants_as_char << line << std::endl;
         }
     }
 
