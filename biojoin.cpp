@@ -16,12 +16,15 @@ int main(int argc, char *argv[]){
     std::string separator1 = "\t";
     std::string separator2 = "\t";
     std::string separator_user_wants = "\t";
+    std::vector<int> bed_fields = {0,1,2};
+    bool is_bed = false;
 
     const char help[] =
-            "Usage: reads_count++ [OPTIONS]... BAM_file GFF3_file\n"
+            "Usage: reads_count++ [OPTIONS]... file1 file2\n"
             "\n"
             "Options:\n"
             "  -h        show help options\n"
+            "  -b        the first input file is a BED\n"
             "  -f <n>    field from first file to be used as key\n"
             "  -s <n>    field from second file to be used as key\n"
             "  -d <c>    The field separator string in the first file argument (default tab)\n"
@@ -29,11 +32,14 @@ int main(int argc, char *argv[]){
             "  -o <c>    The field separator the user wants in the output (default tab)\n"
             "  -p <n>    set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hf:s:d:p:e:o:")) != -1){
+    while ((c = getopt (argc, argv, "hbf:s:d:p:e:o:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
                 return 1;
+            case 'b':
+                is_bed = true;
+                break;
             case 'f':
                 key_field = optarg;
                 break;
@@ -93,6 +99,11 @@ int main(int argc, char *argv[]){
 
     std::vector<int> columns_for_key = create_wanted_key(key_field);
     std::vector<int> columns_for_key2 = create_wanted_key(key_field2);
+
+    if (is_bed == true){
+        bed_fields.insert(bed_fields.end(), columns_for_key.begin(), columns_for_key.end());
+        columns_for_key = bed_fields;
+    }
 
     std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char1);
 
