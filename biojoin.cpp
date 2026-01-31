@@ -17,7 +17,9 @@ int main(int argc, char *argv[]){
     std::string separator2 = "\t";
     std::string separator_user_wants = "\t";
     std::vector<int> bed_fields = {0,1,2};
+    std::vector<int> bed_fields2 = {0,1,2};
     bool is_bed = false;
+    bool is_bed2 = false;
 
     const char help[] =
             "Usage: reads_count++ [OPTIONS]... file1 file2\n"
@@ -25,6 +27,7 @@ int main(int argc, char *argv[]){
             "Options:\n"
             "  -h        show help options\n"
             "  -b        the first input file is a BED\n"
+            "  -B        the second input file is a BEDi\n"
             "  -f <n>    field from first file to be used as key\n"
             "  -s <n>    field from second file to be used as key\n"
             "  -d <c>    The field separator string in the first file argument (default tab)\n"
@@ -32,13 +35,16 @@ int main(int argc, char *argv[]){
             "  -o <c>    The field separator the user wants in the output (default tab)\n"
             "  -p <n>    set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hbf:s:d:p:e:o:")) != -1){
+    while ((c = getopt (argc, argv, "hbBf:s:d:p:e:o:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
                 return 1;
             case 'b':
                 is_bed = true;
+                break;
+            case 'B':
+                is_bed2 = true;
                 break;
             case 'f':
                 key_field = optarg;
@@ -81,7 +87,7 @@ int main(int argc, char *argv[]){
     char separator_user_wants_as_char = separator_user_wants.empty() ? '\t' : separator_user_wants[0];
 
 
-    /* Check if there is a BAM and a GFF3 file */
+    // Check if there are the 2 input files
     if (argc < 2) {
         if (argc == 0)
             std::cout << "Not foud first file for join\n";
@@ -103,6 +109,11 @@ int main(int argc, char *argv[]){
     if (is_bed == true){
         bed_fields.insert(bed_fields.end(), columns_for_key.begin(), columns_for_key.end());
         columns_for_key = bed_fields;
+    }
+
+    if (is_bed2 == true){
+        bed_fields2.insert(bed_fields2.end(), columns_for_key2.begin(), columns_for_key2.end());
+        columns_for_key2 = bed_fields2;
     }
 
     std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char1);
