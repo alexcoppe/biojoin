@@ -85,6 +85,12 @@ void run_biojoin(int argc, char *argv[]) {
     char separator_as_char1 = separator1.empty() ? '\t' : separator1[0];
     char separator_as_char2 = separator2.empty() ? '\t' : separator2[0];
     char separator_user_wants_as_char = separator_user_wants.empty() ? '\t' : separator_user_wants[0];
+    
+    if (is_bed == true && key_field != "" )
+        throw std::invalid_argument("If first input file is tagged as BED with -b the -f, field from first file to be used as key, should not be used");
+
+    if (is_bed2 == true && key_field2 != "" )
+        throw std::invalid_argument("If second input file is tagged as BED with -B the -s, field from first file to be used as key, should not be used");
 
 
     // Check if there are the 2 input files
