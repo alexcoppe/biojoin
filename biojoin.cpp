@@ -141,6 +141,9 @@ void run_biojoin(int argc, char *argv[]) {
         // Loop that constructs the key using the -g parameter after it is parsed by the create_wanted_key function
         std::string second_file_key = "";
         for (auto i: columns_for_key2) {
+            if (i < 0 || i >= static_cast<int>(substrings.size())) {
+                throw std::out_of_range("Column index out of range in second file (check -e or -s)");
+            }
             second_file_key = second_file_key + substrings[i];
         }
 
@@ -149,11 +152,10 @@ void run_biojoin(int argc, char *argv[]) {
         auto range = multi_map.equal_range(second_file_key);
         // To see all the std::pair
         for (auto it = range.first; it != range.second; ++it){
-            if (separator_as_char1 != '\t'){
-                std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
-            }
-            if (separator_as_char1 != '\t')
-                std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
+
+            std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
+
+            std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
 
             std::cout << it->second.back() << separator_user_wants_as_char << line << std::endl;
         }
