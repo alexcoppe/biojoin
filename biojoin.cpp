@@ -8,7 +8,7 @@
 #include<algorithm>
 #include "create_dictionary.h"
 
-int main(int argc, char *argv[]){
+void run_biojoin(int argc, char *argv[]) {
     char c;
     int processes_to_use = 1;
     std::string key_field = "";
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
         switch (c) {
             case 'h':
                 puts(help);
-                return 1;
+                return;
             case 'b':
                 is_bed = true;
                 break;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 else
                     fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
-                return 1;
+                return;
             default:
                 abort();
         }
@@ -93,14 +93,16 @@ int main(int argc, char *argv[]){
             std::cout << "Not foud first file for join\n";
         if (argc == 1)
             std::cout << "Not foud second file for join\n";
-        return -1;
+        throw std::invalid_argument("Two input files are required");
     }
 
     // Check if can open the first file
     std::ifstream input_file1(argv[0]);
     if (!input_file1.is_open()) {
-        std::cerr << "Error: cannot open file: " << argv[0] << std::endl;
-        return 1;
+        std::string error =  "cannot open file: ";
+        std::string path = argv[0];
+        error.append(path);
+        throw std::runtime_error(error);
     }
 
     std::vector<int> columns_for_key = create_wanted_key(key_field);
@@ -121,8 +123,10 @@ int main(int argc, char *argv[]){
     // Check if can open the second file
     std::ifstream input_file2(argv[1]);
     if (!input_file2.is_open()) {
-        std::cerr << "Error: cannot open file: " << argv[1] << std::endl;
-        return 1;
+        std::string error =  "cannot open file: ";
+        std::string path = argv[1];
+        error.append(path);
+        throw std::runtime_error(error);
     }
 
     std::string line;
@@ -148,12 +152,20 @@ int main(int argc, char *argv[]){
             if (separator_as_char1 != '\t'){
                 std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
             }
-            if (separator_as_char2 != '\t')
+            if (separator_as_char1 != '\t')
                 std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
 
             std::cout << it->second.back() << separator_user_wants_as_char << line << std::endl;
         }
     }
+}
 
-    return 0;
+int main(int argc, char *argv[]){
+    try {
+        run_biojoin(argc, argv);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error: " << e.what() << '\n';
+        return 1;
+    }
 }

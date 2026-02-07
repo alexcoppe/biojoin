@@ -38,10 +38,17 @@ std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(
         }
         substrings.emplace_back(line);
 
-        std::string key;
-        for (auto const& i: columns_for_key){
-            key = key + substrings[i];
+        for (int i : columns_for_key) {
+            // If no columns_for_key is present or if i at some point of the loop
+            // bekomes greater than the number of substrings length
+            if (i < 0 || i >= static_cast<int>(substrings.size()))
+                throw std::out_of_range( "Column index out of range in first file (check -d or -f)");
         }
+
+        std::string key;
+        for (auto const&  i: columns_for_key)
+            key += substrings[i];
+
         key_values.insert({key, substrings});
     }
 
