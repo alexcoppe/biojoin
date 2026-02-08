@@ -25,7 +25,7 @@ g++ --version
 clang++ --version
 ```
 
-## Download and Compilation
+Get the package from github and compile it using make
 
 ```console
 >>> git https://github.com/alexcoppe/biojoin.git
@@ -36,22 +36,6 @@ clang++ --version
 After compilation, move the generated executable ```biojoin++``` to a directory listed in the $PATH variable. You can identify these directories by using the ```echo $PATH``` command.
 
 # Run the software :running_man:
-
-## Examples:
-
-Example of flags for specifying desired fields:
-
-Perform a left join on two BED files using standard genomic columns: chromosome, start, and end.
-
-```console
-biojoin++ -b -B data/type_of_gene.bed data/oncogene_tumorsupressor.bed
-```
-
-Perform a left join when the first file is a comma-separated values (CSV) file specified with -d , while the second (-B) is a standard BED file.
-
-```console
-biojoin++ -d , -f 1,2,3 -B data/type_of_gene.csv data/oncogene_tumorsupressor.bed
-```
 
 ## Table with all flags and arguments
 
@@ -65,3 +49,62 @@ Flags and Arguments | Type | What you get
 -d | Char (example ,) | The field separator string in the first file argument (default tab)
 -e | Char (example ;) |The field separator string in the second file argument (default tab)
 -o | Char (example ,) | The field separator the user wants in the output (default tab)
+
+
+
+## Examples:
+
+Below are some example usage commands using the files included in the data directory from the downloaded package.
+
+### :computer: INNER JOIN on BED files
+
+An **INNER JOIN** can be performed on two BED files using the standard genomic columns: chromosome, start, and end.  
+When using the `-b` option (first file as BED) or the `-B` option (second file as BED), the `-f` and `-s` options are not allowed.  
+In these cases, the join key is automatically constructed using the canonical BED fields: the first, second, and third columns of each row.
+
+
+```console
+biojoin++ -b -B data/type_of_gene.bed data/oncogene_tumorsupressor.bed
+
+chr17	7668420	7677451	TP53	Protein	chr17	7668420	7677451	TP53	TSG
+chr1	173863900	173867989	GAS5	LongNonCoding	chr1	173863900	173867989	GAS5	TSG
+chr12	25205245	25250929	KRAS	Protein	chr12	25205245	25250929	KRAS	Oncogene
+chr17	43044294	43125364	BRCA1	Protein	chr17	43044294	43125364	BRCA1	TSG
+chr11	65497737	65506516	MALAT1	LongNonCoding	chr11	65497737	65506516	MALAT1	Oncogene
+chr12	53962311	53974954	HOTAIR	Oncogene	chr12	53962311	53974954	HOTAIR	Oncogene
+chr10	17228240	17237593	VIM	LongNonCoding	chr10	17228240	17237593	VIM	Oncogene
+```
+
+
+### :computer: INNER JOIN between a CSV file and a BED file
+
+Build the map from a CSV gene file, which requires the `-d` option to specify the field separator of the first input file, and filter it using an **INNER JOIN** with `oncogene_tumorsuppressor.bed`, as indicated by the `-B` option.  
+The `-f` option specifies the columns to be used from the first file to construct the JOIN key (note that column indexing for `-f` starts from `0`, not `1`).
+
+
+```console
+biojoin++ -d , -f 1,2,3 -B data/type_of_gene.csv data/oncogene_tumorsupressor.bed
+
+TSG	chr17	7668420	7677451	SG	chr17	7668420	7677451	TP53	TSG
+GAS5	chr1	173863900	173867989	TSG	chr1	173863900	173867989	GAS5	TSG
+KRAS	chr12	25205245	25250929	Oncogene	chr12	25205245	25250929	KRAS	Oncogene
+BRCA1	chr17	43044294	43125364	TSG	chr17	43044294	43125364	BRCA1	TSG
+HOTAIR	chr12	53962311	53974954	Oncogene	chr12	53962311	53974954	HOTAIR	Oncogene
+VIM	chr10	17228240	17237593	Oncogene	chr10	17228240	17237593	VIM	Oncogene
+```
+
+### :computer: CSV output
+
+Same as the previous example, but the output is formatted as a CSV file by setting the output field separator with the `-o ,` option.
+
+
+```console
+biojoin++ -d , -f 1,2,3 -B -o , data/type_of_gene.csv data/oncogene_tumorsupressor.bed
+
+TSG,chr17,7668420,7677451,SG,chr17,7668420,7677451,TP53,TSG
+GAS5,chr1,173863900,173867989,TSG,chr1,173863900,173867989,GAS5,TSG
+KRAS,chr12,25205245,25250929,Oncogene,chr12,25205245,25250929,KRAS,Oncogene
+BRCA1,chr17,43044294,43125364,TSG,chr17,43044294,43125364,BRCA1,TSG
+HOTAIR,chr12,53962311,53974954,Oncogene,chr12,53962311,53974954,HOTAIR,Oncogene
+VIM,chr10,17228240,17237593,Oncogene,chr10,17228240,17237593,VIM,Oncogene
+```
