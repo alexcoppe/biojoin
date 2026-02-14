@@ -8,6 +8,10 @@
 #include<algorithm>
 #include "create_dictionary.h"
 
+
+#define GTF 1
+#define NO_GTF 0
+
 void run_biojoin(int argc, char *argv[]) {
     char c;
     int processes_to_use = 1;
@@ -18,8 +22,11 @@ void run_biojoin(int argc, char *argv[]) {
     std::string separator_user_wants = "\t";
     std::vector<int> bed_fields = {0,1,2};
     std::vector<int> bed_fields2 = {0,1,2};
+    std::vector<int> gtf_fields = {0,3,4};
     bool is_bed = false;
     bool is_bed2 = false;
+    bool is_gtf = false;
+    bool is_gtf2 = false;
 
     const char help[] =
             "Usage: reads_count++ [OPTIONS]... file1 file2\n"
@@ -27,7 +34,8 @@ void run_biojoin(int argc, char *argv[]) {
             "Options:\n"
             "  -h        show help options\n"
             "  -b        the first input file is a BED\n"
-            "  -B        the second input file is a BEDi\n"
+            "  -B        the second input file is a BED\n"
+            "  -g        the first input file is a GTF\n"
             "  -f <n>    field from first file to be used as key\n"
             "  -s <n>    field from second file to be used as key\n"
             "  -d <c>    The field separator string in the first file argument (default tab)\n"
@@ -35,7 +43,7 @@ void run_biojoin(int argc, char *argv[]) {
             "  -o <c>    The field separator the user wants in the output (default tab)\n"
             "  -p <n>    set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hbBf:s:d:p:e:o:")) != -1){
+    while ((c = getopt (argc, argv, "hbBgf:s:d:p:e:o:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
@@ -45,6 +53,9 @@ void run_biojoin(int argc, char *argv[]) {
                 break;
             case 'B':
                 is_bed2 = true;
+                break;
+            case 'g':
+                is_gtf = true;
                 break;
             case 'f':
                 key_field = optarg;
@@ -86,12 +97,18 @@ void run_biojoin(int argc, char *argv[]) {
     char separator_as_char2 = separator2.empty() ? '\t' : separator2[0];
     char separator_user_wants_as_char = separator_user_wants.empty() ? '\t' : separator_user_wants[0];
     
+    // Warnings in the case of the first file being a BED
     if (is_bed == true && key_field != "" )
         throw std::invalid_argument("If first input file is tagged as BED with -b the -f, field from first file to be used as key, should not be used");
 
+    // Warnings in the case of the second file being a BED
     if (is_bed2 == true && key_field2 != "" )
         throw std::invalid_argument("If second input file is tagged as BED with -B the -s, field from first file to be used as key, should not be used");
 
+
+    // Warnings in the case of the second file being a BED
+    if (is_gtf == true && key_field != "" )
+        throw std::invalid_argument("If first input file is tagged as GTF with -g the -f, field from first file to be used as key, should not be used");
 
     // Check if there are the 2 input files
     if (argc < 2) {
@@ -124,7 +141,12 @@ void run_biojoin(int argc, char *argv[]) {
         columns_for_key2 = bed_fields2;
     }
 
-    std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char1);
+    if (is_gtf == true){
+        gtf_fields.insert(gtf_fields.end(), columns_for_key.begin(), columns_for_key.end());
+        columns_for_key = gtf_fields;
+    }
+
+    std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char1, is_gtf ? true : false);
 
     // Check if can open the second file
     std::ifstream input_file2(argv[1]);
@@ -140,6 +162,8 @@ void run_biojoin(int argc, char *argv[]) {
         if (line[0] == '#')
             continue;
 
+        // Split the line using the separator (\t the default)
+        // substrings contains the elemente of the string
         std::vector<std::string>substrings;
         for (auto part : line | std::views::split(separator_as_char2)) {
             substrings.emplace_back(part.begin(), part.end());

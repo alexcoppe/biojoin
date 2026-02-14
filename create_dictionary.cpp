@@ -4,6 +4,10 @@
 #include<unordered_map>
 #include<fstream>
 #include<ranges>
+#include<iostream>
+
+#define GTF 1
+#define NO_GTF 0
 
 // This function construct a multimap
 // As imput it takes an ifstream (the file to read) and the colum_key (the int of the column to be used as key)
@@ -22,7 +26,7 @@
 // {"Jim", ["555", "Jim", "Scientist, "Jim 555 Scientist"]}
 // {"Jim", ["333", "Jim", "CLover, "Jim 555 CLover"]}
 //std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, int colum_key){
-std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, std::vector<int>columns_for_key, char separator){
+std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, std::vector<int>columns_for_key, char separator, bool is_gtf){
     std::string line;
     std::unordered_multimap<std::string, std::vector<std::string>>key_values;
 
@@ -46,8 +50,13 @@ std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(
         }
 
         std::string key;
-        for (auto const&  i: columns_for_key)
-            key += substrings[i];
+        for (auto const&  i: columns_for_key){
+            if (is_gtf == true && i == 3){
+                key += std::to_string(stoi(substrings[i]) - 1);
+            }
+            else
+                key += substrings[i];
+        }
 
         key_values.insert({key, substrings});
     }
