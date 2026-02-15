@@ -43,7 +43,8 @@ Flags and Arguments | Type | What you get
 ------------ | ------------- | -------------
 -h | None | show help options
 -b | None | the first input file is a BED
--B | None | the second input file is a BED 
+-B | None | the second input file is a BED
+-g | None | the first input file is a GTF
 -f | String (example 0,3,5) | field from first file to be used as key
 -s | String (example 2,3,8) |field from second file to be used as key
 -d | Char (example ,) | The field separator string in the first file argument (default tab)
@@ -75,6 +76,21 @@ chr12	53962311	53974954	HOTAIR	Oncogene	chr12	53962311	53974954	HOTAIR	Oncogene
 chr10	17228240	17237593	VIM	LongNonCoding	chr10	17228240	17237593	VIM	Oncogene
 ```
 
+### :computer: INNER JOIN between a GTF and a BED file
+
+Build the map from a GTF file, as indicated by the `-g` option and filter it using an **INNER JOIN** with `type_of_gene.bed`. The `-o` indicates the separator in the output. 
+
+```console
+biojoin++ -g -B  -o , data/oncogene_tumorsupressor.gtf   data/type_of_gene.bed
+
+chr17,User,gene,7668421,7677451,.,.,.,gene_id "TP53"; gene_name "TP53"; type "TSG";,chr17,7668420,7677451,TP53,Protein
+chr1,User,gene,173863901,173867989,.,.,.,gene_id "GAS5"; gene_name "GAS5"; type "TSG";,chr1,173863900,173867989,GAS5,LongNonCoding
+chr12,User,gene,25205246,25250929,.,.,.,gene_id "KRAS"; gene_name "KRAS"; type "Oncogene";,chr12,25205245,25250929,KRAS,Protein
+chr12,User,gene,53962312,53974954,.,.,.,gene_id "HOTAIR"; gene_name "HOTAIR"; type "Oncogene";,chr12,53962311,53974954,HOTAIR,Oncogene
+chr10,User,gene,17228241,17237593,.,.,.,gene_id "VIM"; gene_name "VIM"; type "Oncogene";,chr10,17228240,17237593,VIM,LongNonCoding
+```
+
+An important thing to remember is that the start coordinate (column 4) of a GTF file is 1-based and inclusive. The end coordinate is also inclusive, representing the last base of the feature. See the Coordinate Rules section for a clearer explanation.
 
 ### :computer: INNER JOIN between a CSV file and a BED file
 
@@ -108,3 +124,13 @@ BRCA1,chr17,43044294,43125364,TSG,chr17,43044294,43125364,BRCA1,TSG
 HOTAIR,chr12,53962311,53974954,Oncogene,chr12,53962311,53974954,HOTAIR,Oncogene
 VIM,chr10,17228240,17237593,Oncogene,chr10,17228240,17237593,VIM,Oncogene
 ```
+
+### :notebook: GTF vs. BED Coordinate Rules
+
+
+| Feature | BED (Browser Extensible Data) | GTF (Gene Transfer Format) |
+| :--- | :--- | :--- |
+| **Coordinate System** | **0-based** (Starts counting at 0) | **1-based** (Starts counting at 1) |
+| **Start Position** | **Exclusive** (The start coordinate is not included) | **Inclusive** (The start coordinate is included) |
+| **End Position** | **Inclusive** | **Inclusive** |
+| **Mathematical Length** | `End - Start` | `(End - Start) + 1` |
