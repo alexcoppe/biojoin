@@ -8,7 +8,6 @@
 #include<algorithm>
 #include "create_dictionary.h"
 
-
 #define GTF 1
 #define NO_GTF 0
 
@@ -23,6 +22,7 @@ void run_biojoin(int argc, char *argv[]) {
     std::vector<int> bed_fields = {0,1,2};
     std::vector<int> bed_fields2 = {0,1,2};
     std::vector<int> gtf_fields = {0,3,4};
+    std::vector<int> gtf_fields2 = {0,3,4};
     bool is_bed = false;
     bool is_bed2 = false;
     bool is_gtf = false;
@@ -36,6 +36,7 @@ void run_biojoin(int argc, char *argv[]) {
             "  -b        the first input file is a BED\n"
             "  -B        the second input file is a BED\n"
             "  -g        the first input file is a GTF\n"
+            "  -G        the second input file is a GTF\n"
             "  -f <n>    field from first file to be used as key\n"
             "  -s <n>    field from second file to be used as key\n"
             "  -d <c>    The field separator string in the first file argument (default tab)\n"
@@ -43,7 +44,7 @@ void run_biojoin(int argc, char *argv[]) {
             "  -o <c>    The field separator the user wants in the output (default tab)\n"
             "  -p <n>    set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hbBgf:s:d:p:e:o:")) != -1){
+    while ((c = getopt (argc, argv, "hbBgGf:s:d:p:e:o:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
@@ -56,6 +57,9 @@ void run_biojoin(int argc, char *argv[]) {
                 break;
             case 'g':
                 is_gtf = true;
+                break;
+            case 'G':
+                is_gtf2 = true;
                 break;
             case 'f':
                 key_field = optarg;
@@ -106,9 +110,13 @@ void run_biojoin(int argc, char *argv[]) {
         throw std::invalid_argument("If second input file is tagged as BED with -B the -s, field from first file to be used as key, should not be used");
 
 
-    // Warnings in the case of the second file being a BED
+    // Warnings in the case of the first file being a GTF
     if (is_gtf == true && key_field != "" )
         throw std::invalid_argument("If first input file is tagged as GTF with -g the -f, field from first file to be used as key, should not be used");
+
+    // Warnings in the case of the second file being a GTF
+    if (is_gtf2 == true && key_field != "" )
+        throw std::invalid_argument("If second input file is tagged as GTF with -G the -f, field from first file to be used as key, should not be used");
 
     // Check if there are the 2 input files
     if (argc < 2) {
@@ -146,6 +154,11 @@ void run_biojoin(int argc, char *argv[]) {
         columns_for_key = gtf_fields;
     }
 
+    if (is_gtf2 == true){
+        gtf_fields2.insert(gtf_fields2.end(), columns_for_key2.begin(), columns_for_key2.end());
+        columns_for_key2 = gtf_fields2;
+    }
+
     std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char1, is_gtf ? true : false);
 
     // Check if can open the second file
@@ -174,7 +187,19 @@ void run_biojoin(int argc, char *argv[]) {
             if (i < 0 || i >= static_cast<int>(substrings.size())) {
                 throw std::out_of_range("Column index out of range in second file (check -e or -s)");
             }
-            second_file_key = second_file_key + substrings[i];
+            if (is_gtf2 == true && i == 3 && is_gtf == true){
+                auto as_integer = std::to_string(stoi(substrings[i]) - 1);
+                second_file_key = second_file_key + as_integer;
+            }
+            else if (is_gtf2 == true && i == 3 && is_gtf == false){
+                second_file_key = second_file_key + substrings[i];
+            }
+            else if (is_gtf2 == true && i != 3){
+                second_file_key = second_file_key + substrings[i];
+            }
+            else if (is_gtf2 == false) {
+                second_file_key = second_file_key + substrings[i];
+            }
         }
 
         // Equal_range returns std::pair
