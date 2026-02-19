@@ -45,6 +45,7 @@ Flags and Arguments | Type | What you get
 -b | None | the first input file is a BED
 -B | None | the second input file is a BED
 -g | None | the first input file is a GTF
+-G | None | the second input file is a GTF
 -f | String (example 0,3,5) | field from first file to be used as key
 -s | String (example 2,3,8) |field from second file to be used as key
 -d | Char (example ,) | The field separator string in the first file argument (default tab)
@@ -123,6 +124,17 @@ KRAS,chr12,25205245,25250929,Oncogene,chr12,25205245,25250929,KRAS,Oncogene
 BRCA1,chr17,43044294,43125364,TSG,chr17,43044294,43125364,BRCA1,TSG
 HOTAIR,chr12,53962311,53974954,Oncogene,chr12,53962311,53974954,HOTAIR,Oncogene
 VIM,chr10,17228240,17237593,Oncogene,chr10,17228240,17237593,VIM,Oncogene
+```
+
+### :computer: INNER JOIN between a 2 GTFs files
+
+You can provide two GTF files using the `-g` and `-G` flags for the first and second inputs, respectively. 
+
+```console
+./biojoin++ -g  -G   data/oncogene_tumorsupressor.gtf   data/oncogene.gtf
+
+chr12	User	gene	25205246	25250929	.	.	.	gene_id "KRAS"; gene_name "KRAS"; type "Oncogene";	chr12	User	gene	25205246	25250929	.	..	gene_id "KRAS"; gene_name "KRAS"; type "Oncogene";
+chr12	User	gene	53962312	53974954	.	.	.	gene_id "HOTAIR"; gene_name "HOTAIR"; type "Oncogene";	chr12	User	gene	53962312	53974954	.	..	gene_id "HOTAIR"; gene_name "HOTAIR"; type "Oncogene";
 ```
 
 ### :notebook: GTF vs. BED Coordinate Rules
