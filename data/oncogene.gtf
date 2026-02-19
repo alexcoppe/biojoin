@@ -1,0 +1,3 @@
+chr12	User	gene	25205246	25250929	.	.	.	gene_id "KRAS"; gene_name "KRAS"; type "Oncogene";
+chr17	User	gene	39700239	39728044	.	.	.	gene_id "ERBB2"; gene_name "ERBB2"; type "Oncogene";
+chr12	User	gene	53962312	53974954	.	.	.	gene_id "HOTAIR"; gene_name "HOTAIR"; type "Oncogene";
