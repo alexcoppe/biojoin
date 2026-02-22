@@ -1,6 +1,6 @@
 # biojoin++ :dna:
 
-A command-line tool for joining biological data files (e.g., TSV, GFF, BED). This project is still under heavy development; currently, only BED and generic delimited files are supported
+A command-line tool for joining biological data files (e.g., TSV, GTF, GFF, BED). This project is still under heavy development. At the moment only INNER JOIN have been developed.
 
 Its compilation and functionality have been verified on the following operating system:
 
@@ -44,8 +44,8 @@ Flags and Arguments | Type | What you get
 -h | None | show help options
 -b | None | the first input file is a BED
 -B | None | the second input file is a BED
--g | None | the first input file is a GTF
--G | None | the second input file is a GTF
+-g | None | the first input file is a GTF or a GFF
+-G | None | the second input file is a GTF or a GFF
 -f | String (example 0,3,5) | field from first file to be used as key
 -s | String (example 2,3,8) |field from second file to be used as key
 -d | Char (example ,) | The field separator string in the first file argument (default tab)
@@ -140,7 +140,7 @@ chr12	User	gene	53962312	53974954	.	.	.	gene_id "HOTAIR"; gene_name "HOTAIR"; ty
 ### :notebook: GTF vs. BED Coordinate Rules
 
 
-| Feature | BED (Browser Extensible Data) | GTF (Gene Transfer Format) |
+| Feature | BED (Browser Extensible Data) | GTF (Gene Transfer Format) or GFF (General Feature Format) |
 | :--- | :--- | :--- |
 | **Coordinate System** | **0-based** (Starts counting at 0) | **1-based** (Starts counting at 1) |
 | **Start Position** | **Exclusive** (The start coordinate is not included) | **Inclusive** (The start coordinate is included) |
