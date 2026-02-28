@@ -27,24 +27,27 @@ void run_biojoin(int argc, char *argv[]) {
     bool is_bed2 = false;
     bool is_gtf = false;
     bool is_gtf2 = false;
+    std::vector<std::string> joins = {"INNER", "LEFT_OUTER", "RIGHT_OUTER", "FULL"};
+    std::string join = "INNER";
 
     const char help[] =
             "Usage: reads_count++ [OPTIONS]... file1 file2\n"
             "\n"
             "Options:\n"
-            "  -h        show help options\n"
-            "  -b        the first input file is a BED\n"
-            "  -B        the second input file is a BED\n"
-            "  -g        the first input file is a GTF\n"
-            "  -G        the second input file is a GTF\n"
-            "  -f <n>    field from first file to be used as key\n"
-            "  -s <n>    field from second file to be used as key\n"
-            "  -d <c>    The field separator string in the first file argument (default tab)\n"
-            "  -e <c>    The field separator string in the second file argument (default tab)\n"
-            "  -o <c>    The field separator the user wants in the output (default tab)\n"
-            "  -p <n>    set processors (default 1)\n";
+            "  -h            show help options\n"
+            "  -b            the first input file is a BED\n"
+            "  -B            the second input file is a BED\n"
+            "  -g            the first input file is a GTF\n"
+            "  -G            the second input file is a GTF\n"
+            "  -f <n>        field from first file to be used as key\n"
+            "  -s <n>        field from second file to be used as key\n"
+            "  -d <c>        The field separator string in the first file argument (default tab)\n"
+            "  -e <c>        The field separator string in the second file argument (default tab)\n"
+            "  -j <string>   The type of join to do: INNER, LEFT (OUTER), RIGHT (OUTER), FULL\n"
+            "  -o <c>        The field separator the user wants in the output (default tab)\n"
+            "  -p <n>        set processors (default 1)\n";
 
-    while ((c = getopt (argc, argv, "hbBgGf:s:d:p:e:o:")) != -1){
+    while ((c = getopt (argc, argv, "hbBgGf:s:d:p:e:j:o:")) != -1){
         switch (c) {
             case 'h':
                 puts(help);
@@ -79,6 +82,9 @@ void run_biojoin(int argc, char *argv[]) {
                 if (optarg != NULL)
                     separator2 = optarg;
                 break;
+            case 'j':
+                join = optarg;
+                break;
             case 'o':
                 if (optarg != NULL)
                     separator_user_wants = optarg;
@@ -96,6 +102,11 @@ void run_biojoin(int argc, char *argv[]) {
 
     argc -= optind;
     argv += optind;
+
+    // Warning in the case of wrong join (-j)
+    if (!std::ranges::contains(joins, join)){
+        throw std::invalid_argument("The choosen JOIN using -j is not among these: INNER, LEFT (OUTER), RIGHT (OUTER), FULL");
+    }
 
     char separator_as_char1 = separator1.empty() ? '\t' : separator1[0];
     char separator_as_char2 = separator2.empty() ? '\t' : separator2[0];
@@ -161,6 +172,12 @@ void run_biojoin(int argc, char *argv[]) {
 
     std::unordered_multimap<std::string, std::vector<std::string>> multi_map = build_dictiorany(input_file1, columns_for_key, separator_as_char1, is_gtf ? true : false);
 
+    // The unordered map that will contain the matched elements
+    std::unordered_map<std::string, bool> matched;
+    for (const auto& pair : multi_map) {
+            matched[pair.first] = false;
+    }
+
     // Check if can open the second file
     std::ifstream input_file2(argv[1]);
     if (!input_file2.is_open()) {
@@ -205,16 +222,44 @@ void run_biojoin(int argc, char *argv[]) {
         // Equal_range returns std::pair
         // in this case the key and the value
         auto range = multi_map.equal_range(second_file_key);
-        // To see all the std::pair
-        for (auto it = range.first; it != range.second; ++it){
 
-            std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
-
-            std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
-
-            std::cout << it->second.back() << separator_user_wants_as_char << line << std::endl;
+        if (join == "LEFT_OUTER"){
+            if (range.first != range.second){
+                for (auto it = range.first; it != range.second; ++it) {
+                    matched[it->first] = true;
+                    // Exclusive LEFT JOIN are the default
+                    //std::cout << it->second.back() 
+                    //<< separator_user_wants_as_char
+                    //<< line
+                    //<< std::endl;
+                }
+            }
         }
+        else{
+            // To see all the std::pair
+            for (auto it = range.first; it != range.second; ++it){
+
+                std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
+
+                std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
+
+                std::cout << it->second.back() << separator_user_wants_as_char << line << std::endl;
+            }
+
+        }
+
     }
+
+    // Exclusive LEFT JOIN are the default
+    if (join == "LEFT_OUTER") {
+        for (auto& pair : multi_map)
+            if (!matched[pair.first]) {
+                std::replace(pair.second.back().begin(), pair.second.back().end(), separator_as_char1, separator_user_wants_as_char);
+                std::cout << pair.second.back() << std::endl;
+
+            }
+        }
+    //}
 }
 
 int main(int argc, char *argv[]){

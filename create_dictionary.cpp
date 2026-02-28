@@ -25,7 +25,6 @@
 // {"Rambo", ["123", "Rambo", "Soldier", "123 Rambo Soldier"]},
 // {"Jim", ["555", "Jim", "Scientist, "Jim 555 Scientist"]}
 // {"Jim", ["333", "Jim", "CLover, "Jim 555 CLover"]}
-//std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, int colum_key){
 std::unordered_multimap<std::string, std::vector<std::string>> build_dictiorany(std::ifstream &input_file1, std::vector<int>columns_for_key, char separator, bool is_gtf){
     std::string line;
     std::unordered_multimap<std::string, std::vector<std::string>>key_values;
