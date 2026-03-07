@@ -27,7 +27,7 @@ void run_biojoin(int argc, char *argv[]) {
     bool is_bed2 = false;
     bool is_gtf = false;
     bool is_gtf2 = false;
-    std::vector<std::string> joins = {"INNER", "LEFT_OUTER", "RIGHT_OUTER", "FULL"};
+    std::vector<std::string> joins = {"INNER", "LEFT_EXCLUSIVE", "LEFT_INCLUSIVE",   "RIGHT_EXCLUSIVE", "FULL"};
     std::string join = "INNER";
 
     const char help[] =
@@ -188,6 +188,7 @@ void run_biojoin(int argc, char *argv[]) {
     }
 
     std::string line;
+    int substring_size = 0;
     while (std::getline(input_file2, line)) {
         if (line[0] == '#')
             continue;
@@ -198,6 +199,7 @@ void run_biojoin(int argc, char *argv[]) {
         for (auto part : line | std::views::split(separator_as_char2)) {
             substrings.emplace_back(part.begin(), part.end());
         }
+        substring_size =  substrings.size();
         // Loop that constructs the key using the -g parameter after it is parsed by the create_wanted_key function
         std::string second_file_key = "";
         for (auto i: columns_for_key2) {
@@ -223,7 +225,7 @@ void run_biojoin(int argc, char *argv[]) {
         // in this case the key and the value
         auto range = multi_map.equal_range(second_file_key);
 
-        if (join == "LEFT_OUTER"){
+        if (join == "LEFT_EXCLUSIVE"){
             if (range.first != range.second){
                 for (auto it = range.first; it != range.second; ++it) {
                     matched[it->first] = true;
@@ -234,6 +236,14 @@ void run_biojoin(int argc, char *argv[]) {
                     //<< std::endl;
                 }
             }
+        }
+        else if (join == "LEFT_INCLUSIVE") {
+                for (auto it = range.first; it != range.second; ++it) {
+                    matched[it->first] = true;
+                    std::replace(it->second.back().begin(), it->second.back().end(), separator_as_char1, separator_user_wants_as_char);
+                    std::replace(line.begin(), line.end(), separator_as_char2, separator_user_wants_as_char);
+                    std::cout << it->second.back() << separator_user_wants_as_char << line << std::endl;
+                }
         }
         else{
             // To see all the std::pair
@@ -251,15 +261,37 @@ void run_biojoin(int argc, char *argv[]) {
     }
 
     // Exclusive LEFT JOIN are the default
-    if (join == "LEFT_OUTER") {
+    if (join == "LEFT_EXCLUSIVE") {
         for (auto& pair : multi_map)
             if (!matched[pair.first]) {
                 std::replace(pair.second.back().begin(), pair.second.back().end(), separator_as_char1, separator_user_wants_as_char);
                 std::cout << pair.second.back() << std::endl;
 
             }
-        }
-    //}
+    }
+
+    // Inclusive LEFT JOIN
+    if (join == "LEFT_INCLUSIVE") {
+        for (auto& pair : multi_map)
+            if (!matched[pair.first]) {
+                std::replace(pair.second.back().begin(), pair.second.back().end(), separator_as_char1, separator_user_wants_as_char);
+                // This line will be used in the future as still not supported by Apple Clang
+                //std::string no_values_in_second_file = std::views::repeat(std::string(1, '.'), substring_size) | std::views::join_with('\t') | std::ranges::to<std::string>();
+
+                std::string no_values_in_second_file;
+
+                if (substring_size > 0) {
+                    no_values_in_second_file.reserve(substring_size * 2);
+                    for (int i = 0; i < substring_size; ++i) {
+                        no_values_in_second_file += '.';
+                        if (i < substring_size - 1) no_values_in_second_file += separator_user_wants_as_char;
+                    }
+                }
+
+                std::cout << pair.second.back() << separator_user_wants_as_char << no_values_in_second_file << std::endl;
+
+            }
+    }
 }
 
 int main(int argc, char *argv[]){
