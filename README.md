@@ -50,6 +50,7 @@ Flags and Arguments | Type | What you get
 -s | String (example 2,3,8) |field from second file to be used as key
 -d | Char (example ,) | The field separator string in the first file argument (default tab)
 -e | Char (example ;) |The field separator string in the second file argument (default tab)
+-j | string |   The type of join to run. Availables at the moment: INNER (default), LEFT JOIN Exclusive (```-j LEFT_EXCLUSIVE```), LEFT JOIN Inclusive (```-j LEFT_INCLUSIVE```)
 -o | Char (example ,) | The field separator the user wants in the output (default tab)
 
 
@@ -131,11 +132,39 @@ VIM,chr10,17228240,17237593,Oncogene,chr10,17228240,17237593,VIM,Oncogene
 You can provide two GTF files using the `-g` and `-G` flags for the first and second inputs, respectively. 
 
 ```console
-./biojoin++ -g  -G   data/oncogene_tumorsupressor.gtf   data/oncogene.gtf
+biojoin++ -g  -G   data/oncogene_tumorsupressor.gtf   data/oncogene.gtf
 
 chr12	User	gene	25205246	25250929	.	.	.	gene_id "KRAS"; gene_name "KRAS"; type "Oncogene";	chr12	User	gene	25205246	25250929	.	..	gene_id "KRAS"; gene_name "KRAS"; type "Oncogene";
 chr12	User	gene	53962312	53974954	.	.	.	gene_id "HOTAIR"; gene_name "HOTAIR"; type "Oncogene";	chr12	User	gene	53962312	53974954	.	..	gene_id "HOTAIR"; gene_name "HOTAIR"; type "Oncogene";
 ```
+
+### :computer: LEFT JOIN Exclusive between 2 BED files files
+
+A LEFT JOIN Exclusive returns only the records found in the first (left) file that do not have a match in the second (right) file. This can be used to find unique sequences or mutations that are present in one sample but absent in another.
+
+To perform a LEFT JOIN Exclusive, use the `-j` parameter followed by the LEFT_EXCLUSIVE argument.
+
+```console
+biojoin++   -j LEFT_EXCLUSIVE    -b -B data/small.bed data/oncogene_tumorsupressor.bed
+
+chrX	73820656	73852714	XIST	lncRNA
+chr7	155799980	155812463	SHH	Protein
+```
+
+### :computer: LEFT JOIN Inclusive between 2 BED files files
+
+A LEFT JOIN Inclusive returns all records from the primary (left) file, regardless of whether a match exists in the secondary (right) file. If a match is found, the data is merged; if not, the missing fields are indicated with a point (.) character.
+
+To perform a LEFT JOIN Inclusive, use the `-j` parameter followed by the LEFT_INCLUSIVE argument.
+
+```console
+biojoin++   -j LEFT_INCLUSIVE    -b -B data/small.bed data/oncogene_tumorsupressor.bed
+
+chr17	7668420	7677451	TP53	Protein	chr17	7668420	7677451	TP53	TSG
+chrX	73820656	73852714	XIST	lncRNA	.	.	.	.	.
+chr7	155799980	155812463	SHH	Protein	.	.	.	.	.
+```
+
 
 ### :notebook: GTF vs. BED Coordinate Rules
 
