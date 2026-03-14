@@ -1,0 +1,224 @@
+.TH BIOJOIN 1 "March 2026" "biojoin" "Bioinformatics Tools"
+
+.SH NAME
+biojoin \- join genomic or tabular files by keys or genomic coordinates
+
+.SH SYNOPSIS
+.B biojoin++
+.RI [ OPTIONS ] " FILE1 FILE2"
+
+.SH DESCRIPTION
+.B biojoin
+is a command-line utility for joining two tabular files based on
+user-defined key fields or genomic coordinates.
+
+The program is designed for genomic datasets such as BED, GTF,
+and GFF files but also supports generic delimiter-separated tables.
+
+biojoin builds an in-memory dictionary from the first input file and
+then scans the second file to find matching keys. Matching rows
+can be combined using different relational join strategies.
+
+This design enables efficient lookups for large genomic datasets.
+
+The program is conceptually similar to database joins and tools
+such as
+.BR join (1)
+but optimized for genomic interval formats commonly used in
+bioinformatics workflows.
+
+.SH OPTIONS
+.TP
+.B \-h
+Display help information and exit.
+
+.TP
+.B \-b
+Interpret the first input file as BED format.
+The join key will automatically use the columns:
+chromosome, start, and end.
+
+.TP
+.B \-B
+Interpret the second input file as BED format.
+
+.TP
+.B \-g
+Interpret the first input file as GTF or GFF format.
+
+.TP
+.B \-G
+Interpret the second input file as GTF or GFF format.
+
+.TP
+.BI \-f " FIELDS"
+Specify fields from the first file to build the join key.
+Fields must be provided as comma-separated column indices
+starting from 0.
+
+Example:
+.RS
+-f 0,1,2
+.RE
+
+.TP
+.BI \-s " FIELDS"
+Specify fields from the second file to build the join key.
+
+.TP
+.BI \-d " CHAR"
+Field separator used in the first file.
+Default is tab.
+
+.TP
+.BI \-e " CHAR"
+Field separator used in the second file.
+Default is tab.
+
+.TP
+.BI \-o " CHAR"
+Field separator to use in the output.
+Default is tab.
+
+.TP
+.BI \-j " TYPE"
+Join strategy to use.
+
+Valid values:
+
+.RS
+INNER
+.br
+LEFT_INCLUSIVE
+.br
+LEFT_EXCLUSIVE
+.RE
+
+Default:
+.B INNER
+
+.SH JOIN MODES
+.TP
+.B INNER
+Only rows with matching keys in both files are printed.
+
+.TP
+.B LEFT_INCLUSIVE
+All rows from the first file are printed. If a matching key exists in 
+the second file, data is merged; otherwise, missing fields are 
+indicated with a null value (e.g., a point).
+
+.TP
+.B LEFT_EXCLUSIVE
+Rows from the first file are printed only when NO matching key 
+exists in the second file. This identifies records unique to the 
+first sample.
+
+
+.SH FILE FORMATS
+biojoin supports generic tabular text files.
+
+Input files must be plain text where fields are separated by a
+single delimiter character.
+
+Lines beginning with the character '#'
+are treated as comments and ignored.
+
+Column indices start at 0.
+
+.SS BED FORMAT
+BED files typically contain genomic intervals with at least
+three columns:
+
+.RS
+chromosome
+.br
+start
+.br
+end
+.RE
+
+Example:
+
+.RS
+chr17    7668420    7677451    TP53
+.RE
+
+.SS GTF FORMAT
+GTF and GFF files contain genomic annotations.
+The coordinate system differs slightly from BED, so biojoin
+automatically adjusts coordinates when necessary.
+
+.SH ALGORITHM
+biojoin builds an in-memory hash table using the first input file.
+Keys are constructed by concatenating the selected fields.
+
+The hash table uses an unordered multimap structure so that
+multiple rows may share the same key.
+
+The second file is then streamed line-by-line. For each row,
+a key is constructed and used to query the dictionary.
+
+Matching rows are returned in constant average lookup time.
+
+.SH PERFORMANCE
+Lookup operations rely on a hash table implementation based on
+C++ unordered_multimap.
+
+This approach provides:
+
+.RS
+O(1) average lookup time
+.br
+efficient handling of duplicate keys
+.br
+scalability for large genomic datasets
+.RE
+
+Memory usage depends primarily on the size of the first input file.
+
+.SH EXAMPLES
+Join two BED files by genomic coordinates:
+
+.RS
+biojoin++ -b -B genes.bed annotations.bed
+.RE
+
+Perform a left outer join:
+
+.RS
+biojoin++ -j LEFT_OUTER -b -B file1.bed file2.bed
+.RE
+
+Join using explicit columns:
+
+.RS
+biojoin++ -f 0,1 -s 0,1 file1.tsv file2.tsv
+.RE
+
+Change output delimiter:
+
+.RS
+biojoin++ -o ',' file1.tsv file2.tsv
+.RE
+
+.SH EXIT STATUS
+.TP
+0
+Successful execution.
+
+.TP
+1
+Program terminated due to an error such as invalid arguments
+or file access failure.
+
+.SH AUTHOR
+Alessandro Coppe
+
+.SH LICENSE
+MIT License
+
+.SH SEE ALSO
+.BR join (1),
+.BR awk (1),
+.BR bedtools (1)
